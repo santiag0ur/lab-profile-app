@@ -3,26 +3,27 @@
 const { Router } = require("express");
 const router = Router();
 
-const User = require("./../models/user");
+const uploadImageMiddleware = require("./../middleware/image-upload");
+const routeGuardMiddleware = require("./../middleware/route-guard");
 
-router.post("/signup", (req, res, next) => {
-  const { username, password, campus, course } = req.body;
-  User.signUp({ username, password, campus, course })
-    .then(user => {
-      res.json({ user });
-    })
-    .catch(error => {
-      next(error);
-    });
-});
+const signUpController = require("./../controllers/auth/sign-up");
+const logInController = require("./../controllers/auth/log-in");
+const logOutController = require("./../controllers/auth/log-out");
+const loggedInController = require("./../controllers/auth/logged-in");
+const editController = require("./../controllers/auth/edit");
+const uploadController = require("./../controllers/auth/upload");
 
-router.get("/loggedin", (req, res, next) => {
-  const user = {
-    username: "abc",
-    campus: "Miami",
-    course: "WebDev"
-  };
-  res.json({ user });
-});
+router.post("/signup", routeGuardMiddleware(false), signUpController);
+router.post("/login", routeGuardMiddleware(false), logInController);
+router.post("/logout", routeGuardMiddleware(true), logOutController);
+router.get("/loggedin", loggedInController);
+router.post("/edit", routeGuardMiddleware(true), editController);
+
+router.post(
+  "/upload",
+  routeGuardMiddleware(true),
+  uploadImageMiddleware.single("image"),
+  uploadController
+);
 
 module.exports = router;
